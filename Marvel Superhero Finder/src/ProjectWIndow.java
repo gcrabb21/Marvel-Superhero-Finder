@@ -9,8 +9,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.json.simple.JSONObject;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
+
 import javax.imageio.ImageIO;
 
 import java.awt.image.*;
@@ -22,6 +25,9 @@ public class ProjectWIndow {
 	private static Text SearchBox;
 	private static Boolean toggleDetails;
 	private static Image img;
+	private static Character[] arr;
+	private static Character character;
+	private static String allCharacters;
 	
 	private static Image convert(String link) {
 		try {
@@ -49,6 +55,13 @@ public class ProjectWIndow {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		APIConnection a = new APIConnection(); 
+		Storage s = new Storage(); 
+		Parser p = new Parser(s); 
+		
+		RequestByEvent event = new RequestByEvent(a, p, s); 
+		RequestByName name = new RequestByName(a, p, s); 
+		
 		toggleDetails = false;
 		
 		Display display = Display.getDefault();
@@ -56,15 +69,17 @@ public class ProjectWIndow {
 		shlMarvelSuperheroFinder.setSize(800, 600);
 		shlMarvelSuperheroFinder.setText("Marvel Superhero Finder");
 		
-		Label lblDetails = new Label(shlMarvelSuperheroFinder, SWT.BORDER);
+		Text lblDetails = new Text(shlMarvelSuperheroFinder, SWT.BORDER | SWT.READ_ONLY | SWT.V_SCROLL | SWT.H_SCROLL);
 		lblDetails.setBackground(SWTResourceManager.getColor(SWT.COLOR_WHITE));
 		lblDetails.setBounds(10, 10, 760, 500);
 		lblDetails.setText("Detailed Information");
 		lblDetails.setVisible(false);
 		
-		Label lblInfo = new Label(shlMarvelSuperheroFinder, SWT.NONE);
+		Text lblInfo = new Text(shlMarvelSuperheroFinder, SWT.WRAP | SWT.READ_ONLY | SWT.V_SCROLL);
 		lblInfo.setBounds(23, 60, 550, 400);
-		lblInfo.setText("Information");
+		final GridData data = new GridData(SWT.HORIZONTAL, SWT.TOP, true, false, 1, 1);
+		lblInfo.setLayoutData(data);
+		lblInfo.setText("Information will be displayed here.");
 		
 		Label lblImage = new Label(shlMarvelSuperheroFinder, SWT.NONE);
 		lblImage.setBounds(583, 150, 180, 180);
@@ -85,10 +100,13 @@ public class ProjectWIndow {
 
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				img = convert("https://images-na.ssl-images-amazon.com/images/I/41j6yIwUtzL._SY355_.jpg");
+				character = name.get(SearchBox.getText())[0];
 				
-				lblInfo.setText(SearchBox.getText());
-				lblDetails.setText(String.format("Detailed info about %s.", SearchBox.getText()));
+				
+				img = convert(character.getThumbnail());
+				
+				lblInfo.setText(character.toString());
+				lblDetails.setText(character.getResponse());
 				lblImage.setImage(img);
 			}
 		});
@@ -97,11 +115,11 @@ public class ProjectWIndow {
 		lblSearchBy.setBounds(274, 25, 70, 20);
 		lblSearchBy.setText("Search by:");
 		
-		Button btnID = new Button(shlMarvelSuperheroFinder, SWT.NONE);
-		btnID.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.BOLD));
-		btnID.setBounds(450, 20, 90, 30);
-		btnID.setText("ID");
-		btnID.addSelectionListener(new SelectionListener() {
+		Button btnEvent = new Button(shlMarvelSuperheroFinder, SWT.NONE);
+		btnEvent.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.BOLD));
+		btnEvent.setBounds(450, 20, 90, 30);
+		btnEvent.setText("Event");
+		btnEvent.addSelectionListener(new SelectionListener() {
 
 			@Override
 			public void widgetDefaultSelected(SelectionEvent arg0) {
@@ -110,52 +128,14 @@ public class ProjectWIndow {
 
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				img = convert("https://images-na.ssl-images-amazon.com/images/I/41j6yIwUtzL._SY355_.jpg");
+				arr = event.get(SearchBox.getText());
 				
-				lblInfo.setText(SearchBox.getText());
-				lblDetails.setText(String.format("Detailed info about %s.", SearchBox.getText()));
-				lblImage.setImage(img);
-			}
-		});
-		
-		Button btnComic = new Button(shlMarvelSuperheroFinder, SWT.NONE);
-		btnComic.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.BOLD));
-		btnComic.setBounds(550, 20, 90, 30);
-		btnComic.setText("Comic");
-		btnComic.addSelectionListener(new SelectionListener() {
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent arg0) {
-				//ignore
-			}
-
-			@Override
-			public void widgetSelected(SelectionEvent arg0) {
-				img = convert("https://images-na.ssl-images-amazon.com/images/I/41j6yIwUtzL._SY355_.jpg");
+				img = convert(arr[0].getThumbnail());
 				
-				lblInfo.setText(SearchBox.getText());
-				lblDetails.setText(String.format("Detailed info about %s.", SearchBox.getText()));
-				lblImage.setImage(img);
-			}
-		});
-		
-		Button btnEtc = new Button(shlMarvelSuperheroFinder, SWT.NONE);
-		btnEtc.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.BOLD));
-		btnEtc.setBounds(650, 20, 90, 30);
-		btnEtc.setText("Etc.");
-		btnEtc.addSelectionListener(new SelectionListener() {
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent arg0) {
-				//ignore
-			}
-
-			@Override
-			public void widgetSelected(SelectionEvent arg0) {
-				img = convert("https://images-na.ssl-images-amazon.com/images/I/41j6yIwUtzL._SY355_.jpg");
+				JSONObject tmp = event.connect(); 
 				
-				lblInfo.setText(SearchBox.getText());
-				lblDetails.setText(String.format("Detailed info about %s.", SearchBox.getText()));
+				lblInfo.setText(Storage.printArray(arr));
+				lblDetails.setText(tmp.toString());
 				lblImage.setImage(img);
 			}
 		});
@@ -190,7 +170,7 @@ public class ProjectWIndow {
 		while (!shlMarvelSuperheroFinder.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
-			}
-		}
+			} 
+		} 
 	}
 }
